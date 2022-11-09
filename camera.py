@@ -15,7 +15,7 @@ class Camera:
     def blit_car(self):
         rotated = pygame.transform.rotate(car_img, self.car.angle)
         rect = rotated.get_rect()
-        self.display.blit(rotated, Vector2(350, 200) - (rect.width / 2, rect.height / 2))
+        self.display.blit(rotated, self.car.initial_position - (rect.width / 2, rect.height / 2))
 
     def blit(self, img, x, y):
         self.display.blit(img, self.get_corrected_coordinates(x, y))

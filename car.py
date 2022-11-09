@@ -9,8 +9,8 @@ class Car:
         self.accelerating = False
         self.braking = False
 
-        self.initial_position = Vector2(350, 200)
-        self.position = Vector2(350, 200)
+        self.initial_position = Vector2(350, 300)
+        self.position = Vector2(350, 300)
         self.velocity = Vector2(0.0, 0.0)
         self.max_velocity = 500
 
