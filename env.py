@@ -67,17 +67,18 @@ class AutoDrive(Env):
             self.process_input(action)
             self.move_car(dt)
             state = self.get_readings()
-            done = not self.checkpoints
-            if not done:
-                checkpoints_updated = self.update_checkpoints()
+            done = False
+            checkpoints_updated = self.update_checkpoints()
+            if not self.checkpoints:
+                done = True
+                reward = 5
+            else:
                 new_distance = self.get_euclidian_dist(self.checkpoints[0][0], self.checkpoints[0][1])
                 if checkpoints_updated:
                     reward = 2
                 else:
                     reward = (initial_distance - new_distance) / initial_distance\
                              + ((self.car.velocity.x / self.car.max_velocity) / 2)
-            else:
-                reward = 5
         except GameOverException:
             reward = -1
             done = True
@@ -85,7 +86,7 @@ class AutoDrive(Env):
         return np.asarray(state), reward, done, info
 
     def update_checkpoints(self):
-        if self.get_euclidian_dist(self.checkpoints[0][0], self.checkpoints[0][1]) < 100:
+        if self.get_euclidian_dist(self.checkpoints[0][0], self.checkpoints[0][1]) < 150:
             self.checkpoints.pop(0)
             return True
         return False
@@ -160,11 +161,12 @@ class AutoDrive(Env):
         if self.camera is not None:
             self.camera.blit(self.background_img, 0, 0)
             self.camera.blit_car()
-            self.camera.draw_line((255, 0, 0),
-                                  self.car.position.x,
-                                  self.car.position.y,
-                                  self.checkpoints[0][0],
-                                  self.checkpoints[0][1])
+            if self.checkpoints:
+                self.camera.draw_line((255, 0, 0),
+                                      self.car.position.x,
+                                      self.car.position.y,
+                                      self.checkpoints[0][0],
+                                      self.checkpoints[0][1])
 
 
 def train():
