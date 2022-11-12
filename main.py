@@ -1,7 +1,9 @@
 import pygame
+from math import sin, cos, radians, sqrt, atan2, degrees
+
 from car import Car
 from camera import Camera
-from math import sin, cos, radians, sqrt
+from track import tracks
 
 
 pygame.init()
@@ -9,39 +11,25 @@ pygame.init()
 BLACK = (0, 0, 0)
 
 car_img = pygame.image.load('car.png')
-background = pygame.image.load('track_1.png')
+car_img.set_colorkey((0, 0, 0))
+background = tracks[0].background
+track = tracks[0]
+checkpoints = tracks[0].get_checkpoints()
 
 clock = pygame.time.Clock()
-
-
-def get_checkpoints():
-    return [
-        (1365, 1280),
-        (2300, 1320),
-        (2600, 385),
-        (3320, 450),
-        (4200, 2060),
-        (4900, 1670),
-        (4950, 580),
-        (6170, 1130),
-        (6850, 2800),
-        (3100, 2470),
-        (2270, 2020),
-        (2050, 2960),
-        (300, 2900),
-    ]
 
 
 def get_euclidian_dist(car: Car, x, y):
     return sqrt((car.position.x - x) ** 2 + (car.position.y - y) ** 2)
 
 
-checkpoints = get_checkpoints()
-
-
-def main_loop():
-    car = Car(car_img.get_width(), car_img.get_height())
-    camera = Camera(car)
+def main_loop(chosen_track):
+    global background, track, checkpoints
+    track = chosen_track
+    checkpoints = track.get_checkpoints()
+    background = pygame.image.load(track.background)
+    car = Car(car_img.get_width(), car_img.get_height(), track.initial_position, track.initial_angle)
+    camera = Camera(car, car_img)
 
     while True:
         dt = clock.get_time() / 1000
@@ -52,6 +40,7 @@ def main_loop():
         camera.blit_car()
         get_sensors(car, camera)
         draw_checkpoint_line(camera, car, checkpoints[0])
+        camera.draw_hud()
 
         pygame.display.update()
         clock.tick(45)
@@ -66,13 +55,13 @@ def move_car(car: Car, dt):
         checkpoints.pop(0)
         if not checkpoints:
             car.reset()
-            checkpoints = get_checkpoints()
+            checkpoints = track.get_checkpoints()
     for point in car.get_sides():
         x = int(point[0])
         y = int(point[1])
         if background.get_at((x, y))[0] != 0:
             car.reset()
-            checkpoints = get_checkpoints()
+            checkpoints = track.get_checkpoints()
 
 
 def get_sensors(car: Car, camera: Camera):
@@ -120,6 +109,17 @@ def process_input(car: Car):
         check_steering(event, car)
 
 
+def get_angle_from_next_checkpoint(car: Car, checkpoint):
+    dy = checkpoint[1] - car.position.y
+    dx = checkpoint[0] - car.position.x
+
+    line_angle = degrees(atan2(dy, dx))
+
+    difference = abs(car.get_pov_angle() - line_angle)
+
+    return min(difference, 360 - difference)
+
+
 def check_acceleration(event, car: Car):
     if event.type == pygame.KEYDOWN:
         if event.key == pygame.K_w:
@@ -147,7 +147,7 @@ def check_steering(event, car: Car):
 
 
 if __name__ == '__main__':
-    main_loop()
+    main_loop(tracks[0])
 
 pygame.quit()
 quit()

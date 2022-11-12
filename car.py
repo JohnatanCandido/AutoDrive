@@ -1,20 +1,21 @@
-from math import sin, cos, radians, degrees, copysign
+from math import sin, cos, radians, degrees, copysign, atan2
 from pygame.math import Vector2
 
 ACCELERATION = 50
 
 
 class Car:
-    def __init__(self, length, width):
+    def __init__(self, length, width, initial_position, initial_angle):
         self.accelerating = False
         self.braking = False
 
-        self.initial_position = Vector2(350, 300)
-        self.position = Vector2(350, 300)
+        self.initial_position = Vector2(initial_position.x, initial_position.y)
+        self.position = Vector2(initial_position.x, initial_position.y)
         self.velocity = Vector2(0.0, 0.0)
         self.max_velocity = 500
 
-        self.angle = 0
+        self.initial_angle = initial_angle
+        self.angle = initial_angle
         self.steering = 0.0
         self.max_steering = 30
 
@@ -32,7 +33,7 @@ class Car:
 
         self.position.x = self.initial_position.x
         self.position.y = self.initial_position.y
-        self.angle = 0
+        self.angle = self.initial_angle
 
         self.velocity = Vector2(0.0, 0.0)
         self.steering = 0.0
@@ -133,11 +134,22 @@ class Car:
 
         return x, y
 
+    def get_pov_angle(self):
+        angle = self.get_correct_angle()
+
+        x = self.position.x + (self.length / 2 * cos(radians(angle)))
+        y = self.position.y + (self.length / 2 * sin(radians(angle)))
+
+        dy = y - self.position.y
+        dx = x - self.position.x
+
+        return degrees(atan2(dy, dx))
+
     def get_correct_angle(self):
         angle = -self.angle
         while angle > 360:
             angle -= 360
-        while angle < -360:
+        while angle < 0:
             angle += 360
         return angle
 
